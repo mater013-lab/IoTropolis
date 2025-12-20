@@ -4,9 +4,9 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QSet>
+#include "IoTropolisUnitConnection.h"  // UnitID type
 
 class IoTropolisUnitConnection;
-class IoTropolisGui;
 
 class IoTropolisRegistrationServer : public QObject
 {
@@ -15,12 +15,15 @@ public:
     explicit IoTropolisRegistrationServer(QObject* parent = nullptr);
     bool start(quint16 port);
 
-    void setGui(IoTropolisGui* gui);
-
 signals:
+    // Emitted after HELLO is successfully received
     void unitReady(IoTropolisUnitConnection* unit);
+
+    // Emitted when a unit disconnects (before deletion)
     void unitDisconnected(IoTropolisUnitConnection* unit);
-    void unitError(IoTropolisUnitConnection* unit, const QString &msg);
+
+    // Forwarded protocol error from a unit
+    void unitError(IoTropolisUnitConnection* unit, const QString& msg);
 
 private slots:
     void onNewConnection();
@@ -32,7 +35,8 @@ private slots:
 private:
     QSet<IoTropolisUnitConnection*> m_units;
     QTcpServer* m_server = nullptr;
-    IoTropolisGui* m_gui = nullptr;
+
+    UnitID m_nextUnitID{1};  // Next ID to assign
 
     bool validateOrCreateTypeFile(IoTropolisUnitConnection* unit);
 };

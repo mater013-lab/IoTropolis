@@ -12,11 +12,15 @@ class IoTropolisGui : public QWidget
 public:
     explicit IoTropolisGui(QWidget *parent = nullptr);
 
+public slots:
     void addUnit(IoTropolisUnitConnection* unit);
     void removeUnit(IoTropolisUnitConnection* unit);
 
 private:
     QTableWidget* unitTable;
+
+    // Helper to find a row by UnitID
+    int findRowByUnitID(UnitID id) const;
 };
 
 #endif // IOTROPOLISGUI_H

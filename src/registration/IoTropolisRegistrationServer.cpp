@@ -1,6 +1,5 @@
 #include "registration/IoTropolisRegistrationServer.h"
 #include "registration/IoTropolisUnitConnection.h"
-#include "gui/IoTropolisGui.h"
 
 #include <QTcpSocket>
 #include <QFile>
@@ -18,6 +17,7 @@ IoTropolisRegistrationServer::IoTropolisRegistrationServer(QObject* parent)
         dir.mkpath("./UnitType");
 
     m_units.clear();
+    m_nextUnitID = 1;
 }
 
 bool IoTropolisRegistrationServer::start(quint16 port)
@@ -42,6 +42,12 @@ void IoTropolisRegistrationServer::onNewConnection()
         QTcpSocket* socket = m_server->nextPendingConnection();
         auto* unit = new IoTropolisUnitConnection(socket, this);
 
+        // Assign a unique UnitID
+        unit->setUnitID(m_nextUnitID++);
+
+        qDebug() << "[IoTropolis] New connection assigned UnitID" << unit->unitID()
+                 << "from IP" << unit->ipAddress();
+
         // Connect signals using lambdas to pass unit pointer
         connect(unit, &IoTropolisUnitConnection::helloCompleted, this,
                 [this, unit]() { this->onUnitHello(unit); });
@@ -61,13 +67,15 @@ void IoTropolisRegistrationServer::onNewConnection()
 
 void IoTropolisRegistrationServer::onUnitHello(IoTropolisUnitConnection* unit)
 {
-    qDebug() << "[IoTropolis] HELLO completed from IP" << unit->ipAddress();
+    qDebug() << "[IoTropolis] HELLO completed from UnitID" << unit->unitID()
+             << "IP:" << unit->ipAddress();
     emit unitReady(unit);
 }
 
 void IoTropolisRegistrationServer::onUnitDescribe(IoTropolisUnitConnection* unit)
 {
-    qDebug() << "[IoTropolis] DESCRIBE completed: type =" << unit->unitType()
+    qDebug() << "[IoTropolis] DESCRIBE completed for UnitID" << unit->unitID()
+             << ": type =" << unit->unitType()
              << "subtype =" << unit->unitSubtype()
              << "sensors =" << unit->sensors()
              << "actuators =" << unit->actuators();
@@ -75,26 +83,22 @@ void IoTropolisRegistrationServer::onUnitDescribe(IoTropolisUnitConnection* unit
     // Persist type/subtype if new
     validateOrCreateTypeFile(unit);
 
-    // Notify GUI
-    if (m_gui)
-        m_gui->addUnit(unit);
+    emit unitReady(unit);  // signal after DESCRIBE as well
 }
 
 void IoTropolisRegistrationServer::onUnitProtocolError(IoTropolisUnitConnection* unit, const QString &msg)
 {
-    qWarning() << "[IoTropolis] Protocol error from unit" << unit->ipAddress() << ":" << msg;
+    qWarning() << "[IoTropolis] Protocol error from UnitID" << unit->unitID()
+               << "IP:" << unit->ipAddress() << ":" << msg;
     emit unitError(unit, msg);
 }
 
 void IoTropolisRegistrationServer::onUnitDisconnectedInternal(IoTropolisUnitConnection* unit)
 {
-    qDebug() << "[IoTropolis] Unit disconnected:" << unit->ipAddress();
+    qDebug() << "[IoTropolis] Unit disconnected: UnitID" << unit->unitID()
+             << "IP:" << unit->ipAddress();
 
     m_units.remove(unit);
-
-    if (m_gui)
-        m_gui->removeUnit(unit);
-
     emit unitDisconnected(unit);
 
     unit->deleteLater();
@@ -131,9 +135,4 @@ bool IoTropolisRegistrationServer::validateOrCreateTypeFile(IoTropolisUnitConnec
 
     qDebug() << "[IoTropolis] Created new type file:" << filename;
     return true;
-}
-
-void IoTropolisRegistrationServer::setGui(IoTropolisGui* gui)
-{
-    m_gui = gui;
 }
