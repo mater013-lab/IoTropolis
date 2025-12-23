@@ -4,9 +4,8 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QSet>
-#include "IoTropolisUnitConnection.h"  // UnitID type
 
-class IoTropolisUnitConnection;
+#include "registration/IoTropolisUnitConnection.h"
 
 class IoTropolisRegistrationServer : public QObject
 {
@@ -16,10 +15,13 @@ public:
     bool start(quint16 port);
 
 signals:
-    // Emitted after HELLO is successfully received
-    void unitReady(IoTropolisUnitConnection* unit);
+    // Unit passed HELLO; protocol compatibility confirmed
+    void unitProtocolCompatible(IoTropolisUnitConnection* unit);
 
-    // Emitted when a unit disconnects (before deletion)
+    // Unit passed DESCRIBE; fully registered and usable
+    void unitFullyRegistered(IoTropolisUnitConnection* unit);
+
+    // Unit disconnected (before deletion)
     void unitDisconnected(IoTropolisUnitConnection* unit);
 
     // Forwarded protocol error from a unit
@@ -29,16 +31,14 @@ private slots:
     void onNewConnection();
     void onUnitHello(IoTropolisUnitConnection* unit);
     void onUnitDescribe(IoTropolisUnitConnection* unit);
-    void onUnitProtocolError(IoTropolisUnitConnection* unit, const QString &msg);
+    void onUnitProtocolError(IoTropolisUnitConnection* unit, const QString& msg);
     void onUnitDisconnectedInternal(IoTropolisUnitConnection* unit);
 
 private:
     QSet<IoTropolisUnitConnection*> m_units;
-    QTcpServer* m_server = nullptr;
+    QTcpServer* m_server{nullptr};
 
-    UnitID m_nextUnitID{1};  // Next ID to assign
-
-    bool validateOrCreateTypeFile(IoTropolisUnitConnection* unit);
+    UnitID m_nextUnitID{1};
 };
 
 #endif // IOTROPOLISREGISTRATIONSERVER_H
