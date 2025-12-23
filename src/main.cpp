@@ -1,4 +1,6 @@
 #include <QApplication>
+#include <QDebug>
+
 #include "registration/IoTropolisRegistrationServer.h"
 #include "gui/IoTropolisGui.h"
 
@@ -6,47 +8,40 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    // Create server
     IoTropolisRegistrationServer server;
 
-    // Start server on port 12345
-    if (!server.start(12345)) {
-        qCritical() << "Failed to start server";
+    constexpr quint16 DEFAULT_PORT = 12345;
+    if (!server.start(DEFAULT_PORT)) {
+        qCritical() << "Failed to start IoTropolis server";
         return 1;
     }
 
-    // Create GUI
     IoTropolisGui gui;
 
-    // Connect server signals to GUI slots
-    QObject::connect(&server, &IoTropolisRegistrationServer::unitReady,
-                     &gui, [&gui](IoTropolisUnitConnection* unit) {
+    QObject::connect(&server,
+                     &IoTropolisRegistrationServer::unitFullyRegistered,
+                     &gui,
+                     [&](IoTropolisUnitConnection* unit) {
 
-        // Wait until the DESCRIBE handshake is completed
-        QObject::connect(unit, &IoTropolisUnitConnection::describeCompleted, [&gui, unit]() {
-            gui.addUnit(unit);
+        gui.addUnit(unit);
 
-            qDebug() << "[IoTropolis] Unit ready:"
-                     << unit->unitType()
-                     << unit->unitSubtype()
-                     << unit->ipAddress()
-                     << "Sensors:" << unit->sensors()
-                     << "Actuators:" << unit->actuators();
-        });
-
-        // Handle protocol errors (signal matches exactly)
-        QObject::connect(unit, &IoTropolisUnitConnection::protocolError,
-                         [unit](const QString& msg) {
-            qWarning() << "[IoTropolis] Protocol error from unit" << unit->ipAddress() << ":" << msg;
-        });
-    });
-
-    QObject::connect(&server, &IoTropolisRegistrationServer::unitDisconnected,
-                     &gui, [&gui](IoTropolisUnitConnection* unit) {
-        gui.removeUnit(unit);
-        qDebug() << "[IoTropolis] Unit disconnected:" 
+        qDebug() << "[IoTropolis] Unit fully registered:"
                  << unit->unitType()
                  << unit->unitSubtype()
+                 << unit->ipAddress()
+                 << "Sensors:" << unit->sensorNames()
+                 << "Actuators:" << unit->actuatorNames();
+    });
+
+    QObject::connect(&server,
+                     &IoTropolisRegistrationServer::unitDisconnected,
+                     &gui,
+                     [&](IoTropolisUnitConnection* unit) {
+
+        gui.removeUnit(unit);
+
+        qDebug() << "[IoTropolis] Unit removed from GUI:"
+                 << unit->unitID()
                  << unit->ipAddress();
     });
 
