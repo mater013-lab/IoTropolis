@@ -37,11 +37,13 @@ void IoTropolisGui::addUnit(IoTropolisUnitConnection* unit)
     // Type/Subtype
     unitTable->setItem(row, 3, new QTableWidgetItem(unit->unitType() + " / " + unit->unitSubtype()));
 
+    
     // Sensors
-    unitTable->setItem(row, 4, new QTableWidgetItem(unit->sensors().join(", ")));
+    unitTable->setItem(row, 4, new QTableWidgetItem(unit->sensorNames().join(", ")));
 
     // Actuators
-    unitTable->setItem(row, 5, new QTableWidgetItem(unit->actuators().join(", ")));
+    unitTable->setItem(row, 5, new QTableWidgetItem(unit->actuatorNames().join(", ")));
+
 }
 
 void IoTropolisGui::removeUnit(IoTropolisUnitConnection* unit)
