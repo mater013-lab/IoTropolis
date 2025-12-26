@@ -11,7 +11,9 @@ class IoTropolisRegistrationServer : public QObject
 {
     Q_OBJECT
 public:
-    explicit IoTropolisRegistrationServer(QObject* parent = nullptr);
+//    explicit IoTropolisRegistrationServer(QObject* parent = nullptr);
+    explicit IoTropolisRegistrationServer(const QString& unitTypeDir, QObject* parent = nullptr);
+
     bool start(quint16 port);
 
 signals:
@@ -42,6 +44,7 @@ private:
     QTcpServer* m_server{nullptr};
 
     UnitID m_nextUnitID{1};
+    QString m_unitTypeDir;
 };
 
 #endif // IOTROPOLISREGISTRATIONSERVER_H

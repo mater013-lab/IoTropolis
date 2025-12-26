@@ -3,15 +3,23 @@
 
 #include "registration/IoTropolisRegistrationServer.h"
 #include "gui/IoTropolisGui.h"
+#include "config/IoTropolisConfig.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    IoTropolisRegistrationServer server;
+    // --- Load configuration ---
+    QString configPath = (argc > 1) ? QString(argv[1]) 
+                                    : IoTropolisConfig::defaultConfigPath();
 
-    constexpr quint16 DEFAULT_PORT = 12345;
-    if (!server.start(DEFAULT_PORT)) {
+    IoTropolisConfig config(configPath);
+
+    // --- Create server using unit type directory from config ---
+    IoTropolisRegistrationServer server(config.unitTypeDir());
+
+    // --- Start server with port from config ---
+    if (!server.start(config.tcpPort())) {
         qCritical() << "Failed to start IoTropolis server";
         return 1;
     }

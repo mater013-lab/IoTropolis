@@ -52,14 +52,13 @@ QJsonArray componentsToJson(const QList<IOComponent>& comps)
 
 } // namespace
 
-
-
-IoTropolisRegistrationServer::IoTropolisRegistrationServer(QObject* parent)
+IoTropolisRegistrationServer::IoTropolisRegistrationServer(const QString& unitTypeDir, QObject* parent)
     : QObject(parent)
+    , m_unitTypeDir(unitTypeDir)
 {
     QDir dir;
-    if (!dir.exists("./UnitType"))
-        dir.mkpath("./UnitType");
+    if (!dir.exists(m_unitTypeDir))
+        dir.mkpath(m_unitTypeDir);
 
     m_units.clear();
     m_nextUnitID = 1;
@@ -80,6 +79,7 @@ bool IoTropolisRegistrationServer::start(quint16 port)
     return true;
 }
 
+// ---------------------- Handle new connections ----------------------
 void IoTropolisRegistrationServer::onNewConnection()
 {
     while (m_server->hasPendingConnections())
@@ -111,6 +111,7 @@ void IoTropolisRegistrationServer::onNewConnection()
     }
 }
 
+// ---------------------- Unit events ----------------------
 void IoTropolisRegistrationServer::onUnitHello(IoTropolisUnitConnection* unit)
 {
     qDebug() << "[IoTropolis] HELLO completed from UnitID"
@@ -129,14 +130,13 @@ void IoTropolisRegistrationServer::onUnitDescribe(IoTropolisUnitConnection* unit
              << "sensors =" << unit->sensorNames()
              << "actuators =" << unit->actuatorNames();
 
-    QString filename = QString("./UnitType/%1_%2.json")
-                           .arg(unit->unitType(), unit->unitSubtype());
+    QString filename = QString("%1/%2_%3.json")
+                           .arg(m_unitTypeDir, unit->unitType(), unit->unitSubtype());
     QFile file(filename);
 
     bool persistentExists = file.exists();
 
     if (persistentExists) {
-
         if (!file.open(QIODevice::ReadOnly)) {
             emit unitError(unit, "Cannot open type file for validation");
             return;
@@ -212,10 +212,9 @@ void IoTropolisRegistrationServer::onUnitDisconnectedInternal(
              << unit->unitID()
              << "IP:" << unit->ipAddress();
 
-    // 🔒 NEW — notify observers while the object is still valid
+    // 🔒 notify observers while the object is still valid
     emit unitAboutToBeRemoved(unit);
 
-    // Existing behavior preserved
     m_units.remove(unit);
     emit unitDisconnected(unit);
 
