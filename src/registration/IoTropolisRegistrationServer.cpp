@@ -2,7 +2,6 @@
 #include "registration/IoTropolisUnitConnection.h"
 #include "registration/IOComponent.h"
 
-
 #include <QTcpSocket>
 #include <QFile>
 #include <QDir>
@@ -55,7 +54,6 @@ QJsonArray componentsToJson(const QList<IOComponent>& comps)
 
 
 
-
 IoTropolisRegistrationServer::IoTropolisRegistrationServer(QObject* parent)
     : QObject(parent)
 {
@@ -102,7 +100,9 @@ void IoTropolisRegistrationServer::onNewConnection()
                 this, [this, unit]() { onUnitDescribe(unit); });
 
         connect(unit, &IoTropolisUnitConnection::protocolError,
-                this, [this, unit](const QString& msg) { onUnitProtocolError(unit, msg); });
+                this, [this, unit](const QString& msg) {
+                    onUnitProtocolError(unit, msg);
+                });
 
         connect(unit, &IoTropolisUnitConnection::disconnected,
                 this, [this, unit]() { onUnitDisconnectedInternal(unit); });
@@ -175,7 +175,6 @@ void IoTropolisRegistrationServer::onUnitDescribe(IoTropolisUnitConnection* unit
         }
 
     } else {
-        // --- Create new persistent type file ---
         if (!file.open(QIODevice::WriteOnly)) {
             emit unitError(unit, "Cannot create type file");
             return;
@@ -213,7 +212,12 @@ void IoTropolisRegistrationServer::onUnitDisconnectedInternal(
              << unit->unitID()
              << "IP:" << unit->ipAddress();
 
+    // 🔒 NEW — notify observers while the object is still valid
+    emit unitAboutToBeRemoved(unit);
+
+    // Existing behavior preserved
     m_units.remove(unit);
     emit unitDisconnected(unit);
+
     unit->deleteLater();
 }

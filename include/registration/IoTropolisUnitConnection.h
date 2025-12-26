@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QStringList>
 #include <QList>
+#include <QMap>
 
 #include "registration/IOComponent.h"
 
@@ -31,7 +32,6 @@ public:
     QList<IOComponent> sensors() const   { return m_sensors; }
     QList<IOComponent> actuators() const { return m_actuators; }
 
-    // Convenience accessors
     QStringList sensorNames() const;
     QStringList actuatorNames() const;
 
@@ -56,12 +56,31 @@ private slots:
 
 private:
     // --------------------------------------------------------
+    // NEW: Command Dispatch System
+    // --------------------------------------------------------
+    
+    // Typedef for a pointer to a member function handler
+    typedef void (IoTropolisUnitConnection::*HandlerFunc)(const QByteArray&);
+
+    // Static map that associates strings ("HELLO") with their functions
+    static const QMap<QString, HandlerFunc> m_dispatchMap;
+
+    // Command Handlers
+    void handleHello(const QByteArray& data);
+    void handleDescribe(const QByteArray& data);
+    void handleUnknownCommand(const QString& command);
+
+    // --------------------------------------------------------
     // Protocol helpers
     // --------------------------------------------------------
     void failProtocol(const QString& msg,
                       const QString& clientMsg = QString());
     void sendReply(const QString& msg);
     void resetUnknownCommandCounter();
+
+    bool parseComponents(const QJsonArray& array, 
+                         QList<IOComponent>& list, 
+                         const QString& label);
 
     // --------------------------------------------------------
     // Data members
@@ -79,7 +98,7 @@ private:
 
     int m_unknownCommandCount{0};
 
-    UnitID m_unitID{0}; // Assigned by server
+    UnitID m_unitID{0}; 
 };
 
 #endif // IOTROPOLISUNITCONNECTION_H

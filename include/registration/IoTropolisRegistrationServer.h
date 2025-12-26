@@ -21,6 +21,9 @@ signals:
     // Unit passed DESCRIBE; fully registered and usable
     void unitFullyRegistered(IoTropolisUnitConnection* unit);
 
+    // 🔒 NEW — emitted immediately before removal & deletion
+    void unitAboutToBeRemoved(IoTropolisUnitConnection* unit);
+
     // Unit disconnected (before deletion)
     void unitDisconnected(IoTropolisUnitConnection* unit);
 

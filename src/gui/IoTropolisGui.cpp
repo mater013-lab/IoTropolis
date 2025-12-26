@@ -24,7 +24,9 @@ void IoTropolisGui::addUnit(IoTropolisUnitConnection* unit)
 
     // Checkbox
     QTableWidgetItem* checkbox = new QTableWidgetItem();
-    checkbox->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+    checkbox->setFlags(Qt::ItemIsUserCheckable |
+                       Qt::ItemIsEnabled |
+                       Qt::ItemIsSelectable);
     checkbox->setCheckState(Qt::Unchecked);
     unitTable->setItem(row, 0, checkbox);
 

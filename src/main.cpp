@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
 
     IoTropolisGui gui;
 
+    // ---- Unit fully registered (safe: unit fully alive) ----
     QObject::connect(&server,
                      &IoTropolisRegistrationServer::unitFullyRegistered,
                      &gui,
@@ -33,8 +34,9 @@ int main(int argc, char *argv[])
                  << "Actuators:" << unit->actuatorNames();
     });
 
+    // ---- Unit about to be removed (safe: last chance to read state) ----
     QObject::connect(&server,
-                     &IoTropolisRegistrationServer::unitDisconnected,
+                     &IoTropolisRegistrationServer::unitAboutToBeRemoved,
                      &gui,
                      [&](IoTropolisUnitConnection* unit) {
 
@@ -44,6 +46,14 @@ int main(int argc, char *argv[])
                  << unit->unitID()
                  << unit->ipAddress();
     });
+
+    // ---- Transport-level disconnection (do NOT dereference unit) ----
+    QObject::connect(&server,
+                     &IoTropolisRegistrationServer::unitDisconnected,
+                     &server,
+                     [] {
+                         qDebug() << "[IoTropolis] Unit disconnected (transport-level)";
+                     });
 
     gui.show();
     return app.exec();
