@@ -42,9 +42,9 @@ private slots:
 private:
     QSet<IoTropolisUnitConnection*> m_units;
     QTcpServer* m_server{nullptr};
+    QString m_unitTypeDir;
 
     UnitID m_nextUnitID{1};
-    QString m_unitTypeDir;
 };
 
 #endif // IOTROPOLISREGISTRATIONSERVER_H

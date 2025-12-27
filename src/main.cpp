@@ -5,14 +5,19 @@
 #include "gui/IoTropolisGui.h"
 #include "config/IoTropolisConfig.h"
 
+QString resolveConfigPath(int argc, char* argv[])
+{
+    return (argc > 1)
+            ? QString::fromLocal8Bit(argv[1])
+            : IoTropolisConfig::defaultConfigPath();
+}
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
     // --- Load configuration ---
-    QString configPath = (argc > 1) ? QString(argv[1]) 
-                                    : IoTropolisConfig::defaultConfigPath();
-
+    const QString configPath = resolveConfigPath(argc, argv);
     IoTropolisConfig config(configPath);
 
     // --- Create server using unit type directory from config ---

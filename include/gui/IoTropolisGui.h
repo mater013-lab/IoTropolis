@@ -1,12 +1,11 @@
 #ifndef IOTROPOLISGUI_H
 #define IOTROPOLISGUI_H
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QTableWidget>
-#include <QVBoxLayout>
 #include "registration/IoTropolisUnitConnection.h"
 
-class IoTropolisGui : public QWidget
+class IoTropolisGui : public QMainWindow
 {
     Q_OBJECT
 public:
@@ -16,11 +15,14 @@ public slots:
     void addUnit(IoTropolisUnitConnection* unit);
     void removeUnit(IoTropolisUnitConnection* unit);
 
+private slots:
+    void showAboutDialog();
+
 private:
     QTableWidget* unitTable;
 
-    // Helper to find a row by UnitID
     int findRowByUnitID(UnitID id) const;
+    void createMenus();
 };
 
 #endif // IOTROPOLISGUI_H
